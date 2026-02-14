@@ -1,134 +1,132 @@
-﻿# JNF_SSF (PyTorch + ONNX)
+# JNF\_SSF (PyTorch + ONNX)
 
-This repository contains JNF/SSF model code, training scripts, ONNX export, and ONNX evaluation.
+This repository contains a PyTorch implementation of **Spatially-Selective Deep Non-linear Filters (SSF)** and their **Joint Nonlinear Filter (JNF)** variant, with utilities for training, evaluation, and ONNX export for edge deployment.
 
-## What is included
+The codebase was developed by **SP CUP 2026 MEMBER INFORMATION: Team Nyquist** for **IEEE Signal Processing Cup 2026 (Phase-2)**, targeting a challenging two-microphone smartphone setting where **spatial aliasing** and **reverberation** make classical steering-based beamformers brittle.
 
-- Full `src/` code needed to train and run JNF/SSF
-- ONNX export script for SSF checkpoints
-- ONNX evaluation script (SI-SDR, OSINR, PESQ, STOI)
-- Pretrained checkpoints organized by condition
+---
 
-## Repository layout
+## Reference paper (please cite)
 
-```text
-JNF_SSF_repo/
-  src/
-    config/
-      jnf_flac_config.yaml
-      ssf_flac_config.yaml
-    data/
-    models/
-    scripts/
-      train_jnf.py
-      train_ssf.py
-      train_jnf_ssf.py
-      test_model.py
-      test_flac_folder.py
-      test_ssf.py
-  checkpoints/
-    Anechoic/
-      JNF_SSF/
-        ssf-best-sisdr.ckpt
-    Reverberant/
-      JNF_SSF/
-        ssf-best-sisdr.ckpt
-  export_jnf_ssf_onnx.py
-  eval_jnf_onnx_metrics.py
-  requirements.txt
+This implementation is based on the SSF/JNF framework proposed in:
+
+- **K. Tesch and T. Gerkmann**, *“Multi-channel Speech Separation Using Spatially-Selective Deep Non-linear Filters”*, arXiv:2304.12023, 2023.  
+  arXiv: https://arxiv.org/abs/2304.12023
+
+If you use this repository, please cite the original paper:
+
+```bibtex
+@misc{tesch2023multichannel,
+  title={Multi-channel Speech Separation Using Spatially Selective Deep Non-linear Filters},
+  author={Tesch, Kristina and Gerkmann, Timo},
+  year={2023},
+  eprint={2304.12023},
+  archivePrefix={arXiv},
+  primaryClass={eess.AS}
+}
 ```
 
-## Environment setup
+---
 
+## What this repo provides
+
+- **End-to-end SSF/JNF training** for multi-channel mixtures (complex STFT input).
+- **Reproducible evaluation** (PESQ / STOI / SDR-style metrics depending on the script configuration).
+- **ONNX export + ONNXRuntime sanity checks** for deployment experiments.
+
+---
+
+## Setup
+
+### 1) Create and activate the Conda environment
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate JNF_SSF
 ```
 
-For GPU ONNX inference:
-
+### 2) Install ONNX and ONNX Runtime
 ```bash
-pip install onnxruntime-gpu
+pip install onnx onnxruntime
 ```
 
-## Configure dataset paths
-
-Edit:
-
-- `src/config/jnf_flac_config.yaml`
-- `src/config/ssf_flac_config.yaml`
-
-Set these keys to your dataset:
-
-- `train_clean_dir`
-- `train_noisy_dir`
-- `val_clean_dir`
-- `val_noisy_dir`
-- `test_clean_dir`
-- `test_noisy_dir`
-
-## Train from scratch
-
-### Train JNF
-
+### 3) Verify GPU availability
 ```bash
-python src/scripts/train_jnf.py
+python -c "import torch; print(torch.cuda.is_available())"
 ```
 
-### Train SSF
+---
 
+## Usage
+
+### Train the model
+Edit `config.yaml` as needed, then run:
 ```bash
-python src/scripts/train_ssf.py
+python train.py
 ```
 
-### Joint pipeline script (optional)
-
+### Evaluate on test set
 ```bash
-python src/scripts/train_jnf_ssf.py
+python test.py
 ```
 
-## PyTorch inference/evaluation on folder
+---
 
+## ONNX Export
+
+### Export to ONNX
 ```bash
-python src/scripts/test_flac_folder.py \
-  --model ssf \
-  --ckpt checkpoints/Reverberant/JNF_SSF/ssf-best-sisdr.ckpt \
-  --input_dir Dataset/Audio_Dataset/Test/Noisy \
-  --clean_dir Dataset/Audio_Dataset/Test/Clean \
-  --output_dir outputs/reverb_eval \
-  --target-dir 90 \
-  --device cuda
+python export_jnf_ssf_onnx.py
 ```
 
-## Export checkpoint to ONNX
-
+### Validate ONNX outputs (PyTorch vs ONNX)
 ```bash
-python export_jnf_ssf_onnx.py \
-  --ckpt checkpoints/Reverberant/JNF_SSF/ssf-best-sisdr.ckpt \
-  --config src/config/ssf_flac_config.yaml \
-  --output models/jnf_reverb_dynamic.onnx \
-  --dynamic-batch \
-  --dynamic-time
+python eval_jnf_onnx_metrics.py
 ```
 
-## Evaluate ONNX model
+---
 
-```bash
-python eval_jnf_onnx_metrics.py \
-  --onnx_model models/jnf_reverb_dynamic.onnx \
-  --test_dir Dataset/Audio_Dataset/Test \
-  --output_dir eval_outputs/reverb \
-  --prefer_cuda
+## Repository structure
+
+```
+JNF_SSF/
+├── models/                  # Network architectures
+│   ├── JNF_SSF.py           # Main SSF/JNF model
+├── utils/
+│   ├── audio_utils.py       # STFT/ISTFT, normalization
+│   ├── metrics.py           # PESQ/STOI/etc. helpers
+├── config.yaml              # Training/evaluation configuration
+├── train.py                 # Training entry point
+├── test.py                  # Evaluation entry point
+├── export_jnf_ssf_onnx.py   # ONNX export utility
+├── eval_jnf_onnx_metrics.py # PyTorch vs ONNX validation script
+└── README.md
 ```
 
-Outputs:
+---
 
-- `metrics_progress.csv`
-- `metrics_means.csv`
-- `metrics_averages.txt`
+## Team and contributions
+
+### Core team (SP CUP 2026 MEMBER INFORMATION: Team Nyquist)
+All team members contributed to the end-to-end pipeline—data preparation, model development, experiments, ONNX export checks, and the final report/paper write-up.
+
+- **Fariha Anjum Oshin** (ID: 2106009) — farihaoshin10@gmail.com
+**Wahi Farhan Hoque** (ID: 2106100) — wahihoque@gmail.com
+**Mahafuza Maisha** (ID: 2106143) — alexfriedman748@gmail.com
+**Sumayea Sultana** (ID: 2106099) — sumayeasultana2003@gmail.com
+**Md Abu Saleh Akib** (ID: 2106007) — asaub2019@gmail.com
+**Zarifa Tabassum** (ID: 2106052) — zarifatabassum49@gmail.com
+**Riajul Karim Chowdhury** (ID: 2006153) — riajulkarimchowdhury712@gmail.com
+**Md. Nagib Mahfuz** (ID: 2006166) — 2006166@eee.buet.ac.bd
+**Md.Symria Raihan** (ID: 2006133) — mssymriaraihan@gmail.com
+
+### Supervision / mentorship
+- **Supervisor:** Dr. Mohammad Ariful Haque — arifulhoque@eee.buet.ac.bd (https://eee.buet.ac.bd/people/faculty/dmarh)
+- **Tutor:** Aye Thein Maung  — ayetheinmaung32@gmail.com
+
+---
 
 ## Notes
 
-- JNF/SSF scripts are config-driven. Prefer editing YAML configs instead of hardcoding paths.
-- For reproducible results, keep `fs`, STFT, and channel settings consistent between training and inference.
+- The SSF/JNF family is **not a post-filter on top of a beamformer**: it learns a joint spatial + spectral mapping directly from multi-channel features, which is particularly important when the array spacing pushes the system into aliasing regimes.
+- For ONNX export, keep tensor shapes and dynamic axes consistent with the chosen runtime target (mobile/desktop), and validate numerically with `eval_jnf_onnx_metrics.py`.
+
