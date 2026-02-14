@@ -1,0 +1,40 @@
+data:
+  batch_size: 1
+  dry_target: true
+  meta_frame_length: 48000
+  n_channels: 2
+  n_workers: 0
+  prep_files:
+    data: ./data/prep/prep_mix_data.hdf5
+    meta: ./data/prep/prep_mix_meta.json
+  snr_range: []
+  stft_length_samples: 512
+  stft_shift_samples: 256
+experiment:
+  cirm_comp_C: 1
+  cirm_comp_K: 1
+  learning_rate: 0.001
+  loss_alpha: 10
+  reference_channel: 0
+  weight_decay: 0
+logging:
+  ckpt_dir: ../logs/ckpts
+  tb_log_dir: ../logs/tb_logs
+network:
+  append_freq_idx: false
+  bidirectional: true
+  dropout: 0
+  freq_first: true
+  n_channels: 2
+  n_lstm_hidden1: 256
+  n_lstm_hidden2: 128
+  output_activation: tanh
+  output_type: CRM
+  permute_freqs: false
+seed: 123
+training:
+  gradient_clip_algorithm: value
+  gradient_clip_val: 0
+  max_epochs: 25
+  resume_ckpt: ../logs/ckpts/best.ckpt
+  gpus: 1

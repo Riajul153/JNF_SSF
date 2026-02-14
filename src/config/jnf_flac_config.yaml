@@ -1,0 +1,59 @@
+﻿seed: 123
+
+data:
+  source: flac
+  n_channels: 2
+  batch_size: 12
+  fs: 16000
+  meta_frame_length: 48000
+  stft_length_samples: 512
+  stft_shift_samples: 256
+  n_workers: 8
+  train_clean_dir: "Dataset/Audio_Dataset/Train/Clean"
+  train_noisy_dir: "Dataset/Audio_Dataset/Train/Noisy"
+  val_clean_dir: "Dataset/Audio_Dataset/Validation/Clean"
+  val_noisy_dir: "Dataset/Audio_Dataset/Validation/Noisy"
+  test_clean_dir: "Dataset/Audio_Dataset/Test/Clean"
+  test_noisy_dir: "Dataset/Audio_Dataset/Test/Noisy"
+  train_fraction: 1
+  val_fraction: 1
+  val_split: 0.0
+
+network:
+  n_channels: 2
+  n_lstm_hidden1: 256
+  n_lstm_hidden2: 128
+  bidirectional: True
+  freq_first: True
+  output_type: 'CRM'
+  output_activation: 'tanh'
+  append_freq_idx: False
+  permute_freqs: False
+  dropout: 0
+
+experiment:
+  learning_rate: 0.001
+  weight_decay: 0
+  loss_alpha: 10
+  cirm_comp_K: 1
+  cirm_comp_C: 1
+  reference_channel: 0
+  n_cond_emb_dim: 180
+  condition_enc_type: arange
+  cond_arange_params: [-180, 180, 2]
+  scheduler_type: 'ReduceLROnPLateau'
+  scheduler_params: {
+    factor: 0.8,
+    patience: 3
+  }
+  loss_type: 'l1'
+
+training:
+  max_epochs: 100
+  gradient_clip_val: 0
+  gradient_clip_algorithm: value
+  gpus: 1
+
+logging:
+  tb_log_dir: "../logs/tb_logs"
+  ckpt_dir: "../logs/ckpts"

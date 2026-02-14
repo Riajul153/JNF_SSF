@@ -1,0 +1,19 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Logs and outputs
+logs/
+outputs/
+eval_outputs/
+*.csv
+*.txt
+
+# Audio artifacts
+*.wav
+*.flac
+
+# Runtime ONNX artifacts
+models/*.onnx
+models/*.onnx.data
